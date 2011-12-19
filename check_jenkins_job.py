@@ -97,7 +97,7 @@ def check_result(params, server):
     # > import time; int(time.time())*1000 - 10*60*1000
     # > import time; int(time.time())*1000 - 42*60*1000
     >>> check_result(in_p,  {'building': True, 'result': '', 'building': True, 'timestamp': '1324261160000', 'url': 'http://localhost/job/test/6/'})
-    ('CRITICAL', 'test has been running for 12:55:30, see http://localhost/job/test/6/console#footer')
+    ('CRITICAL', 'test still running after 12:55:30, see http://localhost/job/test/6/console#footer')
 
     """
 
@@ -121,7 +121,7 @@ def check_result(params, server):
                             server['url'])
             status = 'WARNING'
         else:
-            msg = '%s has been running for %s, see on %sconsole#footer' % (
+            msg = '%s still running after %s, watch it on %sconsole#footer' % (
                             params['job'], 
                             job_duration,
                             server['url'])
@@ -225,10 +225,9 @@ def controller():
 
     options, arguments = parser.parse_args()
 
-
-    if (options.job == None):
+    if (options.hostname == None):
         print "\n-H HOSTNAME"
-        print "\nWe need the jenkins server hostname to connec to"
+        print "\nWe need the jenkins server hostname to connect to. --help for help"
         raise SystemExit, 2
 
     if (options.job == None):
