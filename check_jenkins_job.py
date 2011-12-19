@@ -27,7 +27,7 @@ from time import strftime, gmtime
 import base64
 import urllib2
 from urllib2 import HTTPError, URLError, quote
-from sys import exit
+
 
 
 def get_data(url, username, password, timeout):
@@ -113,46 +113,49 @@ def check_result(params, server):
                             params['job'],
                             job_duration,
                             server['url'])
-            return ('CRITICAL', msg)
+            status = 'CRITICAL'
         elif (seconds_since_start >= params['warning'] * 60):
             msg = '%s has been running for %s, see %sconsole#footer' % (
                             params['job'],
                             job_duration,
                             server['url'])
-            return ('WARNING', msg)
+            status = 'WARNING'
         else:
             msg = '%s has been running for %s, see on %sconsole#footer' % (
                             params['job'], 
                             job_duration,
                             server['url'])
-            return ('OK', msg)
+            status = 'OK'
     else:
         # Easy part, the job has completed ...
         if server['result'] == 'SUCCESS':
             duration = seconds2human(server['duration'] / 1000)
-            message = '%s exited normally after %s' % (params['job'], duration)
-            return('OK', message)
+            msg = '%s exited normally after %s' % (params['job'], duration)
+            status = 'OK'
 
         elif server['result'] == 'UNSTABLE':
             duration = seconds2human(server['duration'] / 1000)
             msg = '%s is marked as unstable after %s, see %sconsole#footer' % (
                 params['job'], duration, server['url']) 
-            return('WARNING', msg)
+            status = 'WARNING'
 
         elif server['result'] == 'FAILURE':
             msg = '%s exited with an error, see %sconsole#footer' % (
                 params['job'], server['url'])
-            return('CRITICAL', msg)
+            status = 'CRITICAL'
 
         elif server['result'] == 'ABORTED':
             msg = '%s has been aborted, see %sconsole#footer' % (
                     params['job'], server['url'])
-            return ('UNKNOWN', msg)
+            status = 'UNKNOWN'
         else:
             # If you get there, patch welcome
             msg = '%s is in a not known state, Jenkins API ? see %s' % (
                     params['job'], server['url'])
-            return ('UNKNOWN', msg)
+            status = 'UNKNOWN'
+
+    return(status, msg)
+
 
 
 
@@ -226,23 +229,23 @@ def controller():
     if (options.job == None):
         print "\n-H HOSTNAME"
         print "\nWe need the jenkins server hostname to connec to"
-        raise SystemExit, CRITICAL
+        raise SystemExit, 2
 
     if (options.job == None):
         print "\n-j JOB"
         print "\nWe need the name of the job to check its health"
-        raise SystemExit, CRITICAL
+        raise SystemExit, 2
         
 
     if (options.warning == None):
         print "\n-w MINUTES"
-        print "We need the number of minutes it's ok for the job to run"
-        raise SystemExit, CRITICAL
+        print "\nHow many minutes the job should run ?"
+        raise SystemExit, 2
 
     if (options.critical == None):
         print "\n-c MINUTES"
-        print "\nWe need the maximum number of minutes it's ok for the job to run"
-        raise SystemExit, CRITICAL
+        print "\nHow many minutes maximum the job should run ?"
+        raise SystemExit, 2
 
     return vars(options)
 
@@ -254,14 +257,15 @@ def main():
     clp = controller()
 
  
-    # Thanks http://stackoverflow.com/a/5980173
+
     if clp['verbose']:
         def verboseprint(*args):
+            """ http://stackoverflow.com/a/5980173 print only when verbose ON"""
             # Print each argument separately so caller doesn't need to
             # stuff everything to be printed into a single string
             print 
             for arg in args:
-               print arg,
+                print arg,
             print 
     else:   
         verboseprint = lambda *a: None      # do-nothing function
@@ -269,12 +273,12 @@ def main():
 
     # Validate the port based on the required protocol
     if clp['ssl']:
-        protocol="https"
+        protocol = "https"
         # Unspecified port will be 80 by default, not correct if ssl is ON
         if (clp['port'] == 80):
             clp['port'] = 443
     else:
-        protocol="http" 
+        protocol = "http" 
 
     # Let's make sure we have a valid url
     if (clp['prefix'] != '/'):
@@ -299,11 +303,16 @@ def main():
 
     print '%s - %s' % (status, message)
     # Exit statuses recognized by Nagios
-    if   status == 'OK':       raise SystemExit, 0
-    elif status == 'WARNING':  raise SystemExit, 1
-    elif status == 'CRITICAL': raise SystemExit, 2
-    elif status == 'UNKNOWN':  raise SystemExit, 3
-    else: raise SystemExit, 3
+    if   status == 'OK':
+        raise SystemExit, 0
+    elif status == 'WARNING':
+        raise SystemExit, 1
+    elif status == 'CRITICAL':
+        raise SystemExit, 2
+    elif status == 'UNKNOWN':
+        raise SystemExit, 3
+    else: 
+        raise SystemExit, 3
 
 
 if __name__ == '__main__':
