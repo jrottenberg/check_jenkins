@@ -26,8 +26,9 @@ from optparse import OptionParser, OptionGroup
 from time import strftime, gmtime
 import base64
 import urllib2
-from urllib2 import HTTPError, URLError, quote
-
+from urllib2 import HTTPError, URLError
+from urllib import quote
+from socket import setdefaulttimeout
 
 
 def get_data(url, username, password, timeout):
@@ -39,7 +40,8 @@ def get_data(url, username, password, timeout):
         request.add_header("Authorization", "Basic %s" % base64string)   
 
     try:
-        return urllib2.urlopen(request, timeout=timeout).read()
+	setdefaulttimeout(timeout)
+        return urllib2.urlopen(request).read()
     except HTTPError:
         print 'CRITICAL: Error on %s does the job exist or ever ran ?' % url
         raise SystemExit, 2
