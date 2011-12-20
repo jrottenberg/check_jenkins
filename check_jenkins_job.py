@@ -32,11 +32,11 @@ from urllib2 import HTTPError, URLError, quote
 
 def get_data(url, username, password, timeout):
     """Initialize the connection to Jenkins"""
-	
+
     request = urllib2.Request(url)
     if (username and password):
         base64string = base64.encodestring('%s:%s' % (username, password))
-        request.add_header("Authorization", "Basic %s" % base64string)   
+        request.add_header("Authorization", "Basic %s" % base64string)
 
     try:
         return urllib2.urlopen(request, timeout=timeout).read()
@@ -93,7 +93,7 @@ def check_result(params, server):
 
 
     # Tricky, as the test is time dependant... try it with timestmap value in
-    # > import time; int(time.time())*1000 
+    # > import time; int(time.time())*1000
     # > import time; int(time.time())*1000 - 10*60*1000
     # > import time; int(time.time())*1000 - 42*60*1000
     >>> check_result(in_p,  {'building': True, 'result': '', 'building': True, 'timestamp': '1324261160000', 'url': 'http://localhost/job/test/6/'})
@@ -122,7 +122,7 @@ def check_result(params, server):
             status = 'WARNING'
         else:
             msg = '%s has been running for %s, see on %sconsole#footer' % (
-                            params['job'], 
+                            params['job'],
                             job_duration,
                             server['url'])
             status = 'OK'
@@ -170,7 +170,7 @@ def controller():
              OR the current is not stuck (LastBuild)
     Warning and Critical are defined in minutes
 
-    Ex : 
+    Ex :
 
      check_jenkins.py -H ci.jenkins-ci.org -j infa_release.rss -w 10 -c 42
     will check if the the job infa_release.rss is successful (or not stuck)
@@ -178,7 +178,7 @@ def controller():
     """
 
     version = "%prog " + __version__
-    parser = OptionParser(description=description, usage=usage, 
+    parser = OptionParser(description=description, usage=usage,
                             version=version)
     parser.set_defaults(verbose=False)
 
@@ -235,7 +235,6 @@ def controller():
         print "\n-j JOB"
         print "\nWe need the name of the job to check its health"
         raise SystemExit, 2
-        
 
     if (options.warning == None):
         print "\n-w MINUTES"
@@ -256,7 +255,7 @@ def main():
     # Command Line Parameters
     clp = controller()
 
- 
+
 
     if clp['verbose']:
         def verboseprint(*args):
@@ -267,7 +266,7 @@ def main():
             for arg in args:
                 print arg,
             print 
-    else:   
+    else:
         verboseprint = lambda *a: None      # do-nothing function
 
 
