@@ -26,8 +26,9 @@ from optparse import OptionParser, OptionGroup
 from time import strftime, gmtime
 import base64
 import urllib2
-from urllib2 import HTTPError, URLError, quote
-
+from urllib2 import HTTPError, URLError
+from urllib import quote
+from socket import setdefaulttimeout
 
 
 def get_data(url, username, password, timeout):
@@ -39,7 +40,8 @@ def get_data(url, username, password, timeout):
         request.add_header("Authorization", "Basic %s" % base64string)
 
     try:
-        return urllib2.urlopen(request, timeout=timeout).read()
+	setdefaulttimeout(timeout)
+        return urllib2.urlopen(request).read()
     except HTTPError:
         print 'CRITICAL: Error on %s does the job exist or ever ran ?' % url
         raise SystemExit, 2
@@ -97,7 +99,7 @@ def check_result(params, server):
     # > import time; int(time.time())*1000 - 10*60*1000
     # > import time; int(time.time())*1000 - 42*60*1000
     >>> check_result(in_p,  {'building': True, 'result': '', 'building': True, 'timestamp': '1324261160000', 'url': 'http://localhost/job/test/6/'})
-    ('CRITICAL', 'test has been running for 12:55:30, see http://localhost/job/test/6/console#footer')
+    ('CRITICAL', 'test still running after 12:55:30, see http://localhost/job/test/6/console#footer')
 
     """
 
@@ -121,7 +123,7 @@ def check_result(params, server):
                             server['url'])
             status = 'WARNING'
         else:
-            msg = '%s has been running for %s, see on %sconsole#footer' % (
+            msg = '%s still running after %s, watch it on %sconsole#footer' % (
                             params['job'],
                             job_duration,
                             server['url'])
@@ -136,7 +138,7 @@ def check_result(params, server):
         elif server['result'] == 'UNSTABLE':
             duration = seconds2human(server['duration'] / 1000)
             msg = '%s is marked as unstable after %s, see %sconsole#footer' % (
-                params['job'], duration, server['url']) 
+                params['job'], duration, server['url'])
             status = 'WARNING'
 
         elif server['result'] == 'FAILURE':
@@ -225,10 +227,9 @@ def controller():
 
     options, arguments = parser.parse_args()
 
-
-    if (options.job == None):
+    if (options.hostname == None):
         print "\n-H HOSTNAME"
-        print "\nWe need the jenkins server hostname to connec to"
+        print "\nWe need the jenkins server hostname to connect to. --help for help"
         raise SystemExit, 2
 
     if (options.job == None):
@@ -262,10 +263,10 @@ def main():
             """ http://stackoverflow.com/a/5980173 print only when verbose ON"""
             # Print each argument separately so caller doesn't need to
             # stuff everything to be printed into a single string
-            print 
+            print
             for arg in args:
                 print arg,
-            print 
+            print
     else:
         verboseprint = lambda *a: None      # do-nothing function
 
@@ -277,14 +278,14 @@ def main():
         if (clp['port'] == 80):
             clp['port'] = 443
     else:
-        protocol = "http" 
+        protocol = "http"
 
     # Let's make sure we have a valid url
     if (clp['prefix'] != '/'):
         clp['prefix'] = '/%s/' %  clp['prefix']
 
-    clp['url'] = "%s://%s:%s%sjob/%s/lastBuild/api/python" % (protocol, 
-                        clp['hostname'], 
+    clp['url'] = "%s://%s:%s%sjob/%s/lastBuild/api/python" % (protocol,
+                        clp['hostname'],
                         clp['port'],
                         clp['prefix'],
                         quote(clp['job']))
@@ -310,7 +311,7 @@ def main():
         raise SystemExit, 2
     elif status == 'UNKNOWN':
         raise SystemExit, 3
-    else: 
+    else:
         raise SystemExit, 3
 
 
