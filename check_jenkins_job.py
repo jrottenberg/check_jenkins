@@ -41,7 +41,7 @@ def get_data(url, username, password, timeout):
         request.add_header("Authorization", "Basic %s" % base64string)
 
     try:
-	setdefaulttimeout(timeout)
+        setdefaulttimeout(timeout)
         return urllib2.urlopen(request).read()
     except HTTPError:
         print 'CRITICAL: Error on %s does the job exist or ever ran ?' % url
@@ -67,7 +67,7 @@ def seconds2human(my_time):
     '1 day, 00:00:01'
 
     """
-    my_days, my_seconds = divmod(my_time,86400)
+    my_days, my_seconds = divmod(my_time, 86400)
     time_delta = timedelta(seconds=my_seconds)
     reminder = strftime("%H:%M:%S", gmtime(time_delta.seconds))
     if my_days > 1:
@@ -120,7 +120,11 @@ def check_result(params, server):
         # here I assume they are on the same
         job_started = datetime.fromtimestamp(int(server['timestamp'])/1000)
         now = datetime.now()
-        seconds_since_start = (now - job_started).seconds
+        time_delta = (now - job_started)
+
+        # New in version 2.7 --> datetime.timedelta.total_seconds
+        # we want python >= 2.4 so we will do it ourselves
+        seconds_since_start = time_delta.seconds + time_delta.days * 86400
         job_duration = seconds2human(seconds_since_start)
         if (seconds_since_start >= params['critical'] * 60):
             msg = '%s has been running for %s, see %sconsole#footer' % (
@@ -187,7 +191,8 @@ def controller():
     Ex :
 
      check_jenkins.py -H ci.jenkins-ci.org -j infa_release.rss -w 10 -c 42
-    will check if the the job infa_release.rss is successful (or not stuck)
+    will check if the the job infa_release.rss is successful
+    or not stuck for more than 10 (warn) 42 minutes (critical alert)
 
     """
 
@@ -241,7 +246,8 @@ def controller():
 
     if (options.hostname == None):
         print "\n-H HOSTNAME"
-        print "\nWe need the jenkins server hostname to connect to. --help for help"
+        print "\nWe need the jenkins server hostname to connect to."
+        print "Use  --help for help"
         raise SystemExit, 2
 
     if (options.job == None):
