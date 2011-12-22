@@ -19,11 +19,12 @@ __credits__ = """https://launchpad.net/python-jenkins - this code is a trimmed
 down version with nagios specific code"""
 
 
-from datetime import timedelta, datetime
 
 from optparse import OptionParser, OptionGroup
 
+from datetime import timedelta, datetime
 from time import strftime, gmtime
+
 import base64
 import urllib2
 from urllib2 import HTTPError, URLError
@@ -61,9 +62,20 @@ def seconds2human(my_time):
 
     >>> seconds2human(3601)
     '01:00:01'
+
+    >>> seconds2human(86401)
+    '1 day, 00:00:01'
+
     """
-    time_delta = timedelta(seconds=my_time)
-    return strftime("%H:%M:%S", gmtime(time_delta.seconds))
+    my_days, my_seconds = divmod(my_time,86400)
+    time_delta = timedelta(seconds=my_seconds)
+    reminder = strftime("%H:%M:%S", gmtime(time_delta.seconds))
+    if my_days > 1:
+        return "%s days, %s" % (my_days, reminder)
+    elif my_days == 1:
+        return "%s day, %s" % (my_days, reminder)
+    else:
+        return strftime("%H:%M:%S", gmtime(time_delta.seconds))
 
 
 
@@ -98,7 +110,7 @@ def check_result(params, server):
     # > import time; int(time.time())*1000
     # > import time; int(time.time())*1000 - 10*60*1000
     # > import time; int(time.time())*1000 - 42*60*1000
-    >>> check_result(in_p,  {'building': True, 'result': '', 'building': True, 'timestamp': '1324261160000', 'url': 'http://localhost/job/test/6/'})
+    >>> check_result(in_p,  {'building': True, 'result': '', 'building': True, 'timestamp': '1324196355000', 'url': 'http://localhost/job/test/6/'})
     ('CRITICAL', 'test still running after 12:55:30, see http://localhost/job/test/6/console#footer')
 
     """
