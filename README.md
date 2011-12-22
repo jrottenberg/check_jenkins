@@ -21,7 +21,7 @@ Nagios also supports escalation which is a nice feature in term of process and S
 
 You can test it quickly with :
 
-    ./check_jenkins_job.py  -w 200 -c 300  -H builds.apache.org -S -j  Hadoop-Common-trunk 
+    ./check_jenkins_job.py  -w 200 -c 300  -H builds.apache.org -S -j Hadoop-Common-trunk 
 
 
 Please don't hammer builds.apache.org
