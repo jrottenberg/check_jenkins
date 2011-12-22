@@ -28,7 +28,7 @@ Please don't hammer builds.apache.org
 
 #### Nagios    
 
-Define a command 
+##### Define a command 
 
     # check Jenkins job 
     # Note : we have ssl ON by default
@@ -37,7 +37,7 @@ Define a command
         command_line    $USER2$/check_jenkins_job.py -S -H $HOSTNAME$ -j $ARG1$ -w $ARG2$ -c $ARG3$ -u $ARG4$ -p $ARG5$ 
     }
 
-Then a service
+##### Then a service
 
     define service{
          use                     generic-service
@@ -47,7 +47,7 @@ Then a service
     }
 
 
-I'd recomend put the various scripts in folder defined with `$USER2$` in resource.cfg
+I'd recommend to put the various scripts in a folder defined with `$USER2$` in resource.cfg, to avoid having it with system package based checks in `$USER1$`
 
 
 
