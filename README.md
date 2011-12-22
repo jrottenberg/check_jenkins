@@ -1,4 +1,4 @@
-Check_jenkins
+Check_Jenkins_*
 ====================
 
 Origin
@@ -8,8 +8,8 @@ I've used Jenkins as a Continuous Integration for a while.
 
 Surprisingly the company I joined recently used it also as an orchestration tool :
 
-We don't only manage our code with jenkins but also let it deal with job that process data. In that context it was important to monitor
-the success or failure of a job, but most importantly make sure they don't take too long (https://wiki.jenkins-ci.org/display/JENKINS/Build-timeout+Plugin was not an option)
+We don't only manage our code with jenkins but also let it deal with jobs that process data on other jenkins instances. In that context it was important to monitor
+the success or failure of a job, but most importantly make sure they don't take too long ([timeout-plugin](https://wiki.jenkins-ci.org/display/JENKINS/Build-timeout+Plugin) was not an option)
 
 Nagios also supports escalation which is a nice feature in term of process and SLA in our environment.
 
@@ -31,7 +31,7 @@ Then a service
          use                     generic-service
          service_description     check_jenkins Process data
          check_command           check_jenkins_job!Large_data_process!360!540!nagios!readonly!
-         host_name               ci-01.acme.tld
+         host_name               data-process-01.acme.tld
     }
 
 
