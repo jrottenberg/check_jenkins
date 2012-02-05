@@ -174,15 +174,9 @@ def check_result(params, server):
 
     return(status, msg)
 
-
-
-
-def controller():
-    """Parse user input, fail quick if not enough parameters"""
-
-    description = "A Nagios check for Jenkins."
-
-    usage = """usage: %prog [options] -H SERVER -j JOB -w WARNING -c CRITICAL
+def usage():
+    usage = """
+    usage: %prog [options] -H SERVER -j JOB -w WARNING -c CRITICAL
 
     Make sure the last job is successful
              OR the current is not stuck (LastBuild)
@@ -195,9 +189,16 @@ def controller():
     or not stuck for more than 10 (warn) 42 minutes (critical alert)
 
     """
+    return usage
+
+
+def controller():
+    """Parse user input, fail quick if not enough parameters"""
+
+    description = "A Nagios check for Jenkins."
 
     version = "%prog " + __version__
-    parser = OptionParser(description=description, usage=usage,
+    parser = OptionParser(description=description, usage=usage(),
                             version=version)
     parser.set_defaults(verbose=False)
 
@@ -248,21 +249,25 @@ def controller():
         print "\n-H HOSTNAME"
         print "\nWe need the jenkins server hostname to connect to."
         print "Use  --help for help"
+        print usage()
         raise SystemExit, 2
 
     if (options.job == None):
         print "\n-j JOB"
         print "\nWe need the name of the job to check its health"
+        print usage()
         raise SystemExit, 2
 
     if (options.warning == None):
         print "\n-w MINUTES"
         print "\nHow many minutes the job should run ?"
+        print usage()
         raise SystemExit, 2
 
     if (options.critical == None):
         print "\n-c MINUTES"
         print "\nHow many minutes maximum the job should run ?"
+        print usage()
         raise SystemExit, 2
 
     return vars(options)
