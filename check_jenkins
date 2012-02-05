@@ -8,11 +8,12 @@ http://nagiosplug.sourceforge.net/developer-guidelines.html
 
 
 Few doctests, run with :
- $ python -m doctest check_jenkins_job.py -v
+ $ python -m doctest check_jenkins -v
 
 """
 __author__ = 'Julien Rottenberg'
 __date__ = "December 2011"
+__url__ = "https://github.com/jrottenberg/check_jenkins"
 
 __version__ = "1.0"
 __credits__ = """https://launchpad.net/python-jenkins - this code is a trimmed
@@ -36,6 +37,8 @@ def get_data(url, username, password, timeout):
     """Initialize the connection to Jenkins"""
 
     request = urllib2.Request(url)
+    request.add_header('User-Agent',
+            'check_jenkins/%s %s' % (__version__, __url__))
     if (username and password):
         base64string = base64.encodestring('%s:%s' % (username, password))
         request.add_header("Authorization", "Basic %s" % base64string)
