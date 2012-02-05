@@ -34,7 +34,9 @@ from socket import setdefaulttimeout
 
 
 def get_data(url, username, password, timeout):
-    """Initialize the connection to Jenkins"""
+    """
+    Initialize the connection to Jenkins
+    """
 
     request = urllib2.Request(url)
     request.add_header('User-Agent',
@@ -55,7 +57,8 @@ def get_data(url, username, password, timeout):
 
 
 def seconds2human(my_time):
-    """ Convert given seconds into human readable string
+    """
+    Convert given seconds into human readable string
 
     >>> seconds2human(60)
     '00:01:00'
@@ -84,14 +87,15 @@ def seconds2human(my_time):
 
 
 def check_result(params, server):
-    """ From the server response and input parameter
-        check if the job status should trigger an alert
+    """
+    From the server response and input parameter
+    check if the job status should trigger an alert
 
     Jenkins results
     http://javadoc.jenkins-ci.org/hudson/model/Result.html
 
 
-    >>> in_p = {'job': 'test', 'warning': 10, 'critical': 42}
+    >>> in_p = {'job': 'test', 'warning': 10, 'critical': 42, 'now': datetime.datetime(2012, 2, 5, 15, 12, 40, 305650)}
 
     >>> check_result(in_p, {'building': False, 'result': 'SUCCESS', 'duration': 17852, 'url': 'http://localhost/job/test/6/'})
     ('OK', 'test exited normally after 00:00:17')
@@ -109,10 +113,6 @@ def check_result(params, server):
     ('UNKNOWN', 'test has been aborted, see http://localhost/job/test/6/console#footer')
 
 
-    # Tricky, as the test is time dependant... try it with timestmap value in
-    # > import time; int(time.time())*1000
-    # > import time; int(time.time())*1000 - 10*60*1000
-    # > import time; int(time.time())*1000 - 42*60*1000
     >>> check_result(in_p,  {'building': True, 'result': '', 'building': True, 'timestamp': '1324196355000', 'url': 'http://localhost/job/test/6/'})
     ('CRITICAL', 'test still running after 12:55:30, see http://localhost/job/test/6/console#footer')
 
@@ -122,7 +122,7 @@ def check_result(params, server):
         # TODO: Check the timezone of the server first
         # here I assume they are on the same
         job_started = datetime.fromtimestamp(int(server['timestamp'])/1000)
-        now = datetime.now()
+        now = params['now']
         time_delta = (now - job_started)
 
         # New in version 2.7 --> datetime.timedelta.total_seconds
@@ -171,14 +171,15 @@ def check_result(params, server):
             status = 'UNKNOWN'
         else:
             # If you get there, patch welcome
-            msg = '%s is in a not known state, Jenkins API ? see %s' % (
+            msg = '%s is in a not known state, Jenkins API issue ? see %s' % (
                     params['job'], server['url'])
             status = 'UNKNOWN'
 
     return(status, msg)
 
 def usage():
-    usage = """
+    """ Return usage text so it can be used on failed human interactions"""
+    usage_string = """
     usage: %prog [options] -H SERVER -j JOB -w WARNING -c CRITICAL
 
     Make sure the last job is successful
@@ -192,7 +193,7 @@ def usage():
     or not stuck for more than 10 (warn) 42 minutes (critical alert)
 
     """
-    return usage
+    return usage_string
 
 
 def controller():
@@ -277,14 +278,14 @@ def controller():
 
 
 def main():
-    """Runs all the functions"""
+    """
+    Runs all the functions
+    """
 
     # Command Line Parameters
-    clp = controller()
+    user_in = controller()
 
-
-
-    if clp['verbose']:
+    if user_in['verbose']:
         def verboseprint(*args):
             """ http://stackoverflow.com/a/5980173 print only when verbose ON"""
             # Print each argument separately so caller doesn't need to
@@ -298,34 +299,36 @@ def main():
 
 
     # Validate the port based on the required protocol
-    if clp['ssl']:
+    if user_in['ssl']:
         protocol = "https"
         # Unspecified port will be 80 by default, not correct if ssl is ON
-        if (clp['port'] == 80):
-            clp['port'] = 443
+        if (user_in['port'] == 80):
+            user_in['port'] = 443
     else:
         protocol = "http"
 
     # Let's make sure we have a valid url
-    if (clp['prefix'] != '/'):
-        clp['prefix'] = '/%s/' %  clp['prefix']
+    if (user_in['prefix'] != '/'):
+        user_in['prefix'] = '/%s/' %  user_in['prefix']
 
-    clp['url'] = "%s://%s:%s%sjob/%s/lastBuild/api/python" % (protocol,
-                        clp['hostname'],
-                        clp['port'],
-                        clp['prefix'],
-                        quote(clp['job']))
+    user_in['url'] = "%s://%s:%s%sjob/%s/lastBuild/api/python" % (protocol,
+                        user_in['hostname'],
+                        user_in['port'],
+                        user_in['prefix'],
+                        quote(user_in['job']))
 
-    verboseprint("CLI Arguments : ", clp)
+    user_in['now'] = datetime.now()
 
-
-    out = eval(get_data(clp['url'], clp['username'], clp['password'],
-            clp['timeout']))
-
-    verboseprint("Reply from server :", out)
+    verboseprint("CLI Arguments : ", user_in)
 
 
-    status, message =  check_result(clp, out)
+    jenkins_out = eval(get_data(user_in['url'], user_in['username'],
+        user_in['password'],
+        user_in['timeout']))
+
+    verboseprint("Reply from server :", jenkins_out)
+
+    status, message =  check_result(user_in, jenkins_out)
 
     print '%s - %s' % (status, message)
     # Exit statuses recognized by Nagios
