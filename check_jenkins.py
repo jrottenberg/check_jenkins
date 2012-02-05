@@ -122,8 +122,7 @@ def check_result(params, server):
         # TODO: Check the timezone of the server first
         # here I assume they are on the same
         job_started = datetime.fromtimestamp(int(server['timestamp'])/1000)
-        now = params['now']
-        time_delta = (now - job_started)
+        time_delta = (params['now'] - job_started)
 
         # New in version 2.7 --> datetime.timedelta.total_seconds
         # we want python >= 2.4 so we will do it ourselves
@@ -178,7 +177,10 @@ def check_result(params, server):
     return(status, msg)
 
 def usage():
-    """ Return usage text so it can be used on failed human interactions"""
+    """
+    Return usage text so it can be used on failed human interactions
+    """
+
     usage_string = """
     usage: %prog [options] -H SERVER -j JOB -w WARNING -c CRITICAL
 
@@ -193,16 +195,34 @@ def usage():
     or not stuck for more than 10 (warn) 42 minutes (critical alert)
 
     """
+
     return usage_string
 
 
-def controller():
-    """Parse user input, fail quick if not enough parameters"""
+def description():
+    """
+    Return a valid description of the check
+    """
 
-    description = "A Nagios check for Jenkins."
+    description_string = """
+    A Nagios check for Jenkins.
+
+    It checks if
+     - a job is not taking too long (if still running)
+     - it ran successfully
+    """
+
+    print description_string
+
+
+def controller():
+    """
+    Parse user input, fail quick if not enough parameters
+    """
+
 
     version = "%prog " + __version__
-    parser = OptionParser(description=description, usage=usage(),
+    parser = OptionParser(description=description(), usage=usage(),
                             version=version)
     parser.set_defaults(verbose=False)
 
@@ -211,16 +231,16 @@ def controller():
     parser.add_option('-H', '--hostname', type='string',
                         help='Jenkins hostname')
 
+
+    parser.add_option('-j', '--job', type='string',
+                        help='Job, use quotes if it contains space')
+
+
     parser.add_option('-w', '--warning', type='int',
                         help='Warning threshold')
 
     parser.add_option('-c', '--critical', type='int',
                         help='Critical threshold')
-
-
-    parser.add_option('-j', '--job', type='string',
-                        help='Job, use quotes if it contains space')
-
 
 
     connection = OptionGroup(parser, "Connection Options",
