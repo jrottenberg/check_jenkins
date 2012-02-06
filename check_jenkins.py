@@ -128,8 +128,8 @@ def check_result(params, server):
     """
 
     if server['building']:
-        # TODO: Check the timezone of the server first
-        # here I assume they are on the same
+        # I assume Server and client are on the same TimeZone
+        # the API doesn't tell me where is the server (only /systemInfo)
         job_started = datetime.fromtimestamp(int(server['timestamp'])/1000)
         time_delta = (params['now'] - job_started)
 
@@ -208,34 +208,18 @@ def usage():
     return usage_string
 
 
-def description():
-    """
-    Return a valid description of the check
-    """
-
-    description_string = """
-    A Nagios check for Jenkins.
-
-    It checks if
-     - a job is not taking too long (if still running)
-     - it ran successfully
-    """
-
-    print description_string
 
 
 def controller():
     """
     Parse user input, fail quick if not enough parameters
     """
-
+    
+    description = "A Nagios plugin to check the status of a Jenkins job."
 
     version = "%prog " + __version__
-    parser = OptionParser(description=description(), usage=usage(),
+    parser = OptionParser(description=description, usage=usage(),
                             version=version)
-    parser.set_defaults(verbose=False)
-
-
 
     parser.add_option('-H', '--hostname', type='string',
                         help='Jenkins hostname')
@@ -354,7 +338,8 @@ def main():
                         user_in['prefix'],
                         quote(user_in['job']))
 
-    user_in['now'] = datetime.now()
+    # Get the current time, no need to get the microseconds
+    user_in['now'] = datetime.now().replace(microsecond=0)
 
     verboseprint("CLI Arguments : ", user_in)
 
@@ -375,8 +360,6 @@ def main():
         raise SystemExit, 1
     elif status == 'CRITICAL':
         raise SystemExit, 2
-    elif status == 'UNKNOWN':
-        raise SystemExit, 3
     else:
         raise SystemExit, 3
 
