@@ -7,8 +7,9 @@ https://wiki.jenkins-ci.org/display/JENKINS/Remote+access+API
 http://nagiosplug.sourceforge.net/developer-guidelines.html
 
 
-Few doctests, run with :
- $ python -m doctest check_jenkins -v
+Few doctests to run :
+
+ $ python -m doctest check_jenkins.py -v
 
 """
 __author__ = 'Julien Rottenberg'
@@ -95,7 +96,7 @@ def check_result(params, server):
     http://javadoc.jenkins-ci.org/hudson/model/Result.html
 
 
-    >>> in_p = {'job': 'test', 'warning': 10, 'critical': 42, 'now': datetime.datetime(2012, 2, 5, 15, 12, 40, 305650)}
+    >>> in_p = {'job': 'test', 'warning': 60, 'critical': 120, 'now': datetime(2012, 2, 5, 16, 12, 41, 999999)}
 
     >>> check_result(in_p, {'building': False, 'result': 'SUCCESS', 'duration': 17852, 'url': 'http://localhost/job/test/6/'})
     ('OK', 'test exited normally after 00:00:17')
@@ -112,9 +113,17 @@ def check_result(params, server):
     >>> check_result(in_p, {'building': False, 'result': 'ABORTED', 'duration': 17852, 'url': 'http://localhost/job/test/6/'})
     ('UNKNOWN', 'test has been aborted, see http://localhost/job/test/6/console#footer')
 
+                                                                                             
+    >>> check_result(in_p,  {'building': True, 'result': '', 'building': True, 'timestamp': '1328483562000', 'url': 'http://localhost/job/test/6/'})
+    ('OK', 'test still running after 00:59:59, watch it on http://localhost/job/test/6/console#footer')
 
-    >>> check_result(in_p,  {'building': True, 'result': '', 'building': True, 'timestamp': '1324196355000', 'url': 'http://localhost/job/test/6/'})
-    ('CRITICAL', 'test still running after 12:55:30, see http://localhost/job/test/6/console#footer')
+    >>> check_result(in_p,  {'building': True, 'result': '', 'building': True, 'timestamp': '1328479962000', 'url': 'http://localhost/job/test/6/'})
+    ('WARNING', 'test has been running for 01:59:59, see http://localhost/job/test/6/console#footer')
+
+
+    >>> check_result(in_p,  {'building': True, 'result': '', 'building': True, 'timestamp': '1328476362000', 'url': 'http://localhost/job/test/6/'})
+    ('CRITICAL', 'test has been running for 02:59:59, see http://localhost/job/test/6/console#footer')
+
 
     """
 
@@ -237,10 +246,10 @@ def controller():
 
 
     parser.add_option('-w', '--warning', type='int',
-                        help='Warning threshold')
+                        help='Warning threshold in minutes' )
 
     parser.add_option('-c', '--critical', type='int',
-                        help='Critical threshold')
+                        help='Critical threshold in minutes')
 
 
     connection = OptionGroup(parser, "Connection Options",
@@ -268,6 +277,14 @@ def controller():
 
 
     options, arguments = parser.parse_args()
+
+
+    if (arguments != []):
+        print """Non recognized option %s
+        Please use --help for usage""" % arguments
+        print usage()
+        raise SystemExit, 2
+
 
     if (options.hostname == None):
         print "\n-H HOSTNAME"
