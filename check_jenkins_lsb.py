@@ -8,7 +8,7 @@ http://nagiosplug.sourceforge.net/developer-guidelines.html
 
 
 Few doctests, run with :
- $ python -m doctest check_jenkins_lastSuccessfulBuild.py -v
+ $ python -m doctest check_jenkins_lsb.py -v
 
 """
 __author__ = 'Julien Rottenberg'
