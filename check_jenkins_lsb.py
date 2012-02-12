@@ -18,12 +18,8 @@ __version__ = "1.0"
 __credits__ = """https://launchpad.net/python-jenkins - this code is a trimmed
 down version with nagios specific code"""
 
-
 from datetime import timedelta, datetime
-
 from optparse import OptionParser, OptionGroup
-
-
 import base64
 import urllib2
 import re
@@ -54,7 +50,6 @@ def get_data(url, username, password, timeout):
         raise SystemExit, 2
 
 
-
 def convert_to_timedelta(time_val):
     """
     http://code.activestate.com/recipes/577894/
@@ -62,7 +57,7 @@ def convert_to_timedelta(time_val):
     Given a *time_val* (string) such as '5d', returns a timedelta object
     representing the given value (e.g. timedelta(days=5)).  Accepts the
     following '<num><char>' formats:
-    
+
     =========   ======= ===================
     Character   Meaning Example
     =========   ======= ===================
@@ -107,7 +102,7 @@ def convert_to_timedelta(time_val):
         except ValueError:
             raise ValueError('Please use a valid unit')
 
-    
+
 def seconds2human(my_time):
     """ Convert given duration in seconds into human readable string
 
@@ -128,19 +123,16 @@ def seconds2human(my_time):
     return str(time_delta)
 
 
-
 def build_url(job_url_id, suffix):
     """ Build a generic jenkins url
     based on the url of a specific Build (job/NAME/ID/)
-    
+
     >>> build_url('https://localhost:8080/jenkins/job/myBuild/42/', '/api')
     'https://localhost:8080/jenkins/job/myBuild/api'
-    
     """
-    url_prefix = re.match(r'^(.*)\/\d+\/', job_url_id).group(1) 
-    return url_prefix + suffix 
-    
-    
+    url_prefix = re.match(r'^(.*)\/\d+\/', job_url_id).group(1)
+    return url_prefix + suffix
+
 
 def check_result(params, server):
     """ From the server response and input parameter
@@ -165,7 +157,7 @@ def check_result(params, server):
 
     """
 
-    job_started = datetime.fromtimestamp(int(server['timestamp'])/1000)
+    job_started = datetime.fromtimestamp(int(server['timestamp']) / 1000)
     now = params['now']
     now_since_start = now - job_started
     msg = '%s last successful run was %s ago - see %s' % (
@@ -188,7 +180,7 @@ def usage():
     """
     Return usage text so it can be used on failed human interactions
     """
-    
+
     usage_string = """
     usage: %prog [options] -H SERVER -j JOB -w WARNING -c CRITICAL
 
@@ -203,7 +195,7 @@ def usage():
 
     """
     return usage_string
-    
+
 
 def controller():
     """
@@ -213,13 +205,10 @@ def controller():
     description = """A Nagios plugin to check if the last successful
 run of a Jenkins Job was not too long ago."""
 
-    
     version = "%prog " + __version__
     parser = OptionParser(description=description, usage=usage(),
                             version=version)
     parser.set_defaults(verbose=False)
-
-
 
     parser.add_option('-H', '--hostname', type='string',
                         help='Jenkins hostname')
@@ -230,10 +219,8 @@ run of a Jenkins Job was not too long ago."""
     parser.add_option('-c', '--critical', type='string',
                         help='Critical threshold, units s, m, h, d')
 
-
     parser.add_option('-j', '--job', type='string',
                         help='Job, use quotes if it contains space')
-
 
     connection = OptionGroup(parser, "Connection Options",
                     "Network / Authentication related options")
@@ -303,8 +290,6 @@ def main():
     # Command Line Parameters
     user_in = controller()
 
-
-
     if user_in['verbose']:
         def verboseprint(*args):
             """ http://stackoverflow.com/a/5980173 print only when verbose ON"""
@@ -317,7 +302,6 @@ def main():
     else:
         verboseprint = lambda *a: None      # do-nothing function
 
-
     # Validate the port based on the required protocol
     if user_in['ssl']:
         protocol = "https"
@@ -329,7 +313,7 @@ def main():
 
     # Let's avoid the double / if we specified a prefix
     if (user_in['prefix'] != '/'):
-        user_in['prefix'] = '/%s/' %  user_in['prefix']
+        user_in['prefix'] = '/%s/' % user_in['prefix']
 
     user_in['url'] = "%s://%s:%s%sjob/%s/%s" % (protocol,
                         user_in['hostname'],
@@ -343,15 +327,14 @@ def main():
 
     verboseprint("CLI Arguments : ", user_in)
 
-    jenkins_out = eval(get_data(user_in['url'], 
-                        user_in['username'], 
+    jenkins_out = eval(get_data(user_in['url'],
+                        user_in['username'],
                         user_in['password'],
                         user_in['timeout']))
 
     verboseprint("Reply from server :", jenkins_out)
 
-
-    status, message =  check_result(user_in, jenkins_out)
+    status, message = check_result(user_in, jenkins_out)
 
     print '%s - %s' % (status, message)
     # Exit statuses recognized by Nagios
@@ -367,4 +350,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

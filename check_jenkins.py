@@ -20,13 +20,9 @@ __version__ = "1.0"
 __credits__ = """https://launchpad.net/python-jenkins - this code is a trimmed
 down version with nagios specific code"""
 
-
-
 from optparse import OptionParser, OptionGroup
-
 from datetime import timedelta, datetime
 from time import strftime, gmtime
-
 import base64
 import urllib2
 from urllib2 import HTTPError, URLError
@@ -85,8 +81,6 @@ def seconds2human(my_time):
         return strftime("%H:%M:%S", gmtime(time_delta.seconds))
 
 
-
-
 def check_result(params, server):
     """
     From the server response and input parameter
@@ -113,7 +107,7 @@ def check_result(params, server):
     >>> check_result(in_p, {'building': False, 'result': 'ABORTED', 'duration': 17852, 'url': 'http://localhost/job/test/6/'})
     ('UNKNOWN', 'test has been aborted, see http://localhost/job/test/6/console#footer')
 
-                                                                                             
+
     >>> check_result(in_p,  {'building': True, 'result': '', 'building': True, 'timestamp': '1328483562000', 'url': 'http://localhost/job/test/6/'})
     ('OK', 'test still running after 00:59:59, watch it on http://localhost/job/test/6/console#footer')
 
@@ -130,7 +124,7 @@ def check_result(params, server):
     if server['building']:
         # I assume Server and client are on the same TimeZone
         # the API doesn't tell me where is the server (only /systemInfo)
-        job_started = datetime.fromtimestamp(int(server['timestamp'])/1000)
+        job_started = datetime.fromtimestamp(int(server['timestamp']) / 1000)
         time_delta = (params['now'] - job_started)
 
         # New in version 2.7 --> datetime.timedelta.total_seconds
@@ -185,6 +179,7 @@ def check_result(params, server):
 
     return(status, msg)
 
+
 def usage():
     """
     Return usage text so it can be used on failed human interactions
@@ -208,13 +203,11 @@ def usage():
     return usage_string
 
 
-
-
 def controller():
     """
     Parse user input, fail quick if not enough parameters
     """
-    
+
     description = "A Nagios plugin to check the status of a Jenkins job."
 
     version = "%prog " + __version__
@@ -224,17 +217,14 @@ def controller():
     parser.add_option('-H', '--hostname', type='string',
                         help='Jenkins hostname')
 
-
     parser.add_option('-j', '--job', type='string',
                         help='Job, use quotes if it contains space')
 
-
     parser.add_option('-w', '--warning', type='int',
-                        help='Warning threshold in minutes' )
+                        help='Warning threshold in minutes')
 
     parser.add_option('-c', '--critical', type='int',
                         help='Critical threshold in minutes')
-
 
     connection = OptionGroup(parser, "Connection Options",
                     "Network / Authentication related options")
@@ -259,16 +249,13 @@ def controller():
                         help='Verbose mode')
     parser.add_option_group(extra)
 
-
     options, arguments = parser.parse_args()
-
 
     if (arguments != []):
         print """Non recognized option %s
         Please use --help for usage""" % arguments
         print usage()
         raise SystemExit, 2
-
 
     if (options.hostname == None):
         print "\n-H HOSTNAME"
@@ -318,7 +305,6 @@ def main():
     else:
         verboseprint = lambda *a: None      # do-nothing function
 
-
     # Validate the port based on the required protocol
     if user_in['ssl']:
         protocol = "https"
@@ -330,7 +316,7 @@ def main():
 
     # Let's make sure we have a valid url
     if (user_in['prefix'] != '/'):
-        user_in['prefix'] = '/%s/' %  user_in['prefix']
+        user_in['prefix'] = '/%s/' % user_in['prefix']
 
     user_in['url'] = "%s://%s:%s%sjob/%s/lastBuild/api/python" % (protocol,
                         user_in['hostname'],
@@ -343,14 +329,13 @@ def main():
 
     verboseprint("CLI Arguments : ", user_in)
 
-
     jenkins_out = eval(get_data(user_in['url'], user_in['username'],
         user_in['password'],
         user_in['timeout']))
 
     verboseprint("Reply from server :", jenkins_out)
 
-    status, message =  check_result(user_in, jenkins_out)
+    status, message = check_result(user_in, jenkins_out)
 
     print '%s - %s' % (status, message)
     # Exit statuses recognized by Nagios
@@ -366,4 +351,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
