@@ -1,0 +1,5 @@
+pep8
+pylint
+coverage
+nose
+nosexcover
