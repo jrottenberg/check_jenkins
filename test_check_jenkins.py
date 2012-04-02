@@ -2,11 +2,17 @@
 #-*- coding: utf-8 -*-
 
 import unittest
+from mock import Mock, patch
 from optparse import OptionParser, OptionGroup
 from datetime import timedelta, datetime
 from time import strftime, gmtime
+import urllib2
+
+from urllib2 import HTTPError, URLError
+from urllib import quote
 import base64
 from check_jenkins import CheckJenkins
+from StringIO import StringIO
 
 
 class TestCheckJenkins(unittest.TestCase):
@@ -22,6 +28,51 @@ class TestCheckJenkins(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.cj = CheckJenkins()
+
+
+
+    class MyHTTPHandler(urllib2.HTTPHandler):
+        def http_open(self, req):
+            return self.mock_response(req)
+
+        def mock_response(self, req):
+            if req.get_full_url() == "http://localhost/test":
+                resp = urllib2.addinfourl(StringIO("mock file"), "mock message", req.get_full_url())
+                resp.code = 200
+                resp.msg = "OK"
+                return resp
+            if req.get_full_url() == "http://localhost/typo":
+                resp = urllib2.addinfourl(StringIO("mock file"), "mock message", req.get_full_url())
+                resp.code = 404
+                resp.msg = "Not Found"
+                return resp    
+            else:
+                raise SystemExit, 2
+            
+
+    def test_get_data_ok(self):
+        my_opener = urllib2.build_opener(self.MyHTTPHandler)
+        urllib2.install_opener(my_opener)
+        dl_ok = self.cj.get_data('http://localhost/test', 'user', 'pass', 1)
+
+
+    def test_get_data_typo(self):
+        my_opener = urllib2.build_opener(self.MyHTTPHandler)
+        urllib2.install_opener(my_opener)
+        try:
+            dl_typo = self.cj.get_data('http://localhost/typo', 'user', 'pass', 1)
+        except SystemExit, e: 
+            self.assertRaises(HTTPError)
+
+    def test_get_data_error(self):
+        my_opener = urllib2.build_opener(self.MyHTTPHandler)
+        urllib2.install_opener(my_opener)
+        try:
+            dl_error = self.cj.get_data('http://fdsfsd', 'user', 'pass', 1)
+        except SystemExit, e: 
+            self.assertRaises(URLError)
+
+
 
     def test_seconds2human(self):
         for integer, string in self.test_suite_seconds2human:                
@@ -60,8 +111,10 @@ class TestCheckJenkins(unittest.TestCase):
            
                                 
 
-                
+    def test_controller(self):
+        optionparser_mock = Mock()
         
+
         
         
 if __name__ == '__main__':

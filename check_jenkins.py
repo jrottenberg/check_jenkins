@@ -50,7 +50,7 @@ class CheckJenkins(object):
             print 'CRITICAL: Error on %s does the job exist or ever ran ?' % url
             raise SystemExit, 2
         except URLError:
-            print 'CRITICAL:Error on %s Double check the server name' % url
+            print 'CRITICAL: Error on %s Double check the server name' % url
             raise SystemExit, 2
 
 
