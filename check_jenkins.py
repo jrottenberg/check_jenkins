@@ -159,6 +159,14 @@ class CheckJenkins(object):
         return usage_string
 
 
+    def display(self, arguments):
+        print
+        """Non recognized option %s
+    Please use --help for usage""" % arguments
+        print
+        self.usage()
+        raise SystemExit, 2
+
     def controller(self):
         """
         Parse user input, fail quick if not enough parameters
@@ -209,8 +217,9 @@ class CheckJenkins(object):
         options, arguments = parser.parse_args()
 
         if (arguments != []):
-            print """Non recognized option %s
-            Please use --help for usage""" % arguments
+            self.display(arguments)
+            """Non recognized option %s
+        Please use --help for usage""" % arguments
             print self.usage()
             raise SystemExit, 2
 
