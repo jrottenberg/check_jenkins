@@ -36,7 +36,7 @@ def get_data(url, username, password, timeout):
 
     request = urllib2.Request(url)
     if (username and password):
-        b64string = base64.encodestring('%s:%s' % (username, password))
+        b64string = base64.b64encode('%s:%s' % (username, password))
         request.add_header("Authorization", "Basic %s" % b64string)
 
     try:
