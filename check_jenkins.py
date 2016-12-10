@@ -40,7 +40,7 @@ class CheckJenkins(object):
         request.add_header('User-Agent',
                 'check_jenkins/%s %s' % (__version__, __url__))
         if (username and password):
-            base64string = base64.encodestring('%s:%s' % (username, password))
+            base64string = base64.b64encode('%s:%s' % (username, password))
             request.add_header("Authorization", "Basic %s" % base64string)
 
         try:
